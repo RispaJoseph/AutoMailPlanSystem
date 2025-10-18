@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+env/
+.venv/
+venv/
+.env
+*.log
+
+# Django
+staticfiles/
+media/
+db.sqlite3
+
+# Node / React
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
+# IDE / system
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+
+# Build / coverage
+*.egg-info/
+.coverage
+htmlcov/
+build/
