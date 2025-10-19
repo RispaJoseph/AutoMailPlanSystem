@@ -174,10 +174,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_ALL_ORIGINS = os.environ.get("CORS_ALLOW_ALL_ORIGINS", "False").lower() in ("true","1","yes")
 if not CORS_ALLOW_ALL_ORIGINS:
-    CORS_ALLOWED_ORIGINS = _split_env_list("CORS_ALLOWED_ORIGINS", "http://localhost:5173")
+    CORS_ALLOWED_ORIGINS = _split_env_list("CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000")
 else:
-    # temporary for debugging only; remove for production
     CORS_ALLOWED_ORIGINS = []
+
 
 
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
