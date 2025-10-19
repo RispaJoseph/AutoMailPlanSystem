@@ -1,28 +1,20 @@
 # backend/mailplans/auth_views.py
-import logging
-import traceback
+from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework_simplejwt.views import TokenObtainPairView
-
-from .auth_serializers import FlexibleTokenObtainPairSerializer
-
-logger = logging.getLogger(__name__)
+# import only serializers from same app
+from .serializers import SafeTokenObtainPairSerializer
 
 class SafeTokenObtainPairView(TokenObtainPairView):
-    """
-    Safe wrapper around TokenObtainPairView that uses a flexible serializer
-    and logs full tracebacks to server logs (so Render will capture them).
-    """
-    serializer_class = FlexibleTokenObtainPairSerializer
+    serializer_class = SafeTokenObtainPairSerializer
 
     def post(self, request, *args, **kwargs):
-        try:
-            return super().post(request, *args, **kwargs)
-        except Exception as exc:
-            tb = traceback.format_exc()
-            logger.error("Exception in TokenObtainPairView: %s\n%s", exc, tb)
-            return Response({
-                "detail": "Internal server error during authentication.",
-                "error": str(exc)
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        data = request.data.copy()
+        if 'username' not in data:
+            for candidate in ('email', 'username_or_email', 'identifier', 'user'):
+                if candidate in data and data.get(candidate):
+                    data['username'] = data.get(candidate)
+                    break
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
