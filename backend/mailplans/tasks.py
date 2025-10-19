@@ -9,6 +9,7 @@ from django.conf import settings
 from .models import MailPlan, EmailLog
 import logging
 import json
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -110,6 +111,29 @@ def send_mail_task(self, mailplan_id, node_id=None):
     Celery task to send an email for a given MailPlan ID.
     Optionally accepts node_id to target a specific email node in the flow.
     """
+    # --- EMERGENCY SAFETY LOCK ---
+    # Set environment variable DISABLE_EMAIL_SEND=1 to skip actual sending while debugging.
+    if os.environ.get("DISABLE_EMAIL_SEND", "0") in ("1", "true", "True"):
+        logger.warning(f"[MailPlan:{mailplan_id}] send_mail_task skipped because DISABLE_EMAIL_SEND is set.")
+        try:
+            mp = MailPlan.objects.filter(id=mailplan_id).first()
+            if mp:
+                try:
+                    EmailLog.objects.create(
+                        mailplan=mp,
+                        to_email="(skipped)",
+                        subject="(skipped)",
+                        body="Skipped sending due to DISABLE_EMAIL_SEND flag",
+                        status="skipped",
+                        response_message="send_skipped_by_debug_flag"
+                    )
+                except Exception:
+                    logger.exception("Failed to create skip EmailLog entry for MailPlan %s", mailplan_id)
+        except Exception:
+            logger.exception("Error while recording skip for MailPlan %s", mailplan_id)
+        return {"status": "skipped", "reason": "DISABLE_EMAIL_SEND set"}
+    # --- END SAFETY LOCK ---
+
     try:
         mp = MailPlan.objects.get(id=mailplan_id)
     except MailPlan.DoesNotExist:
@@ -151,7 +175,7 @@ def send_mail_task(self, mailplan_id, node_id=None):
 
     # Determine subject and content (node overrides top-level)
     raw_subject = (node_data.get("subject") if node_data and node_data.get("subject") else mp.subject) or ""
-    raw_content = (node_data.get("body") if node_data and node_data.get("body") else mp.content) or ""
+    raw_content = (node_data.get("body") if node_data and node_data.get("body") else getattr(mp, "content", None)) or ""
 
     # Create EmailLog entry (best-effort)
     log = None
@@ -282,6 +306,7 @@ def send_mail_task(self, mailplan_id, node_id=None):
             return {"status": "failed", "reason": "max_retries_exceeded"}
 
 
+# helper to convert flow into graph (unchanged)
 def _flow_to_graph(flow):
     """
     Convert flow dict into adjacency mapping and node map.
@@ -332,9 +357,8 @@ def execute_flow_task(self, mailplan_id):
     Traverse the saved flow and schedule send_mail_task calls
     respecting Delay nodes. This runs once per trigger.
 
-    Improvements:
-      - Better logging so you can see traversal and scheduled delays.
-      - Use timezone-aware ETA for scheduling send_mail_task (sometimes more robust).
+    The implementation schedules send_mail_task.apply_async with ETA when there
+    is an accumulated delay; otherwise it enqueues immediate send.
     """
     try:
         mp = MailPlan.objects.get(id=mailplan_id)
@@ -411,10 +435,9 @@ def execute_flow_task(self, mailplan_id):
                 node_id, add_seconds, unit, dur, old_acc, acc_seconds
             )
 
-        # If this node is an email node -> schedule send with the current acc_seconds
+    # If this node is an email node -> schedule send with the current acc_seconds
         if node.get("type") == "email" or (node.get("data") and (node.get("data").get("recipient_email") or node.get("data").get("recipient"))):
             # compute ETA for clarity
-            eta_time = None
             try:
                 if acc_seconds and acc_seconds > 0:
                     eta_time = timezone.now() + timedelta(seconds=acc_seconds)
@@ -447,7 +470,6 @@ def execute_flow_task(self, mailplan_id):
     return {"status": "scheduled_flow", "mailplan_id": mp.id}
 
 
-
 @shared_task
 def schedule_due_mailplans():
     """
@@ -473,13 +495,9 @@ def schedule_due_mailplans():
     )
 
     for mp in day_later_plans:
-        # For 'after_1_day' we can either schedule the flow executor or direct send.
-        # We'll schedule the flow executor so any delays are respected.
         try:
-            # enqueue flow execution
             execute_flow_task.delay(mp.id)
         except Exception:
-            # fallback: send directly
             send_mail_task.delay(mp.id)
 
     logger.info(

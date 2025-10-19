@@ -1,3 +1,4 @@
+# backend/mailplans/models.py
 from django.db import models
 
 class MailPlan(models.Model):
@@ -16,25 +17,25 @@ class MailPlan(models.Model):
     ]
 
     name = models.CharField(max_length=100)
-    subject = models.CharField(max_length=200)
-    content = models.TextField()
-    trigger_type = models.CharField(max_length=50, choices=PLAN_TRIGGER_CHOICES)
-    scheduled_time = models.DateTimeField(null=True, blank=True)
-    recipient_email = models.EmailField(db_index=True)
+    # restore subject (this is the missing column)
+    subject = models.CharField(max_length=200, null=True, blank=True)
+    # content was removed in a later migration, so we do not keep it here
+    trigger_type = models.CharField(max_length=50, choices=PLAN_TRIGGER_CHOICES, default='on_signup')
+    scheduled_time = models.DateTimeField(blank=True, null=True)
+    recipient_email = models.EmailField(blank=True, null=True)
     recipient_name = models.CharField(max_length=255, blank=True, null=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active', db_index=True)
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
-
-    # store the visual flow (React Flow nodes + edges) so frontend can load it
-    flow = models.JSONField(default=dict, blank=True, help_text='Visual flow JSON: {nodes: [], edges: []}')
-
-    # existing template vars
-    template_vars = models.JSONField(default=dict, blank=True, help_text='Merge variables, e.g. {"first_name": "Rispa"}')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    created_at = models.DateTimeField(auto_now_add=True)
+    # flow field added in migration 0005
+    flow = models.JSONField(blank=True, default=dict, help_text='Visual flow JSON: {nodes: [], edges: []}')
+    # template_vars / other JSON fields (kept nullable/defaults per migration)
+    template_vars = models.JSONField(blank=True, default=dict, null=True)
 
     def __str__(self):
-        if self.recipient_name:
-            return f"{self.name} -> {self.recipient_name} <{self.recipient_email}>"
-        return f"{self.name} -> {self.recipient_email}"
+        display = self.name
+        if self.recipient_email:
+            display += f" -> {self.recipient_email}"
+        return display
 
 
 class EmailLog(models.Model):

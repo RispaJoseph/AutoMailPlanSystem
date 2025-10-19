@@ -2,6 +2,11 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 import os
+
+if os.environ.get("DISABLE_EMAIL_SEND", "0") in ("1", "true", "True"):
+    EMAIL_BACKEND = "django.core.mail.backends.dummy.EmailBackend"
+
+    
 from dotenv import load_dotenv
 load_dotenv()
 from datetime import timedelta
