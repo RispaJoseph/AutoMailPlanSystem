@@ -10,7 +10,8 @@ from datetime import timedelta
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 
-DEBUG = True
+# DEBUG = True
+DEBUG = os.environ.get("DEBUG", "False").lower() in ("true", "1", "yes")
 
 def _split_env_list(env_key, default=""):
     return [v.strip() for v in os.environ.get(env_key, default).split(",") if v.strip()]
@@ -76,20 +77,54 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
-        # ensure SSL for Supabase
-        'OPTIONS': {
-            'sslmode': os.getenv('PGSSLMODE', 'require'),
-        },
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.getenv('DB_NAME'),
+#         'USER': os.getenv('DB_USER'),
+#         'PASSWORD': os.getenv('DB_PASSWORD'),
+#         'HOST': os.getenv('DB_HOST'),
+#         'PORT': os.getenv('DB_PORT'),
+#         'OPTIONS': {
+#             'sslmode': os.getenv('PGSSLMODE', 'require'),
+#         },
+#     }
+# }
+
+
+
+# Add near top imports
+import dj_database_url
+
+# Prefer a single DATABASE_URL env var if present (convenient on many hosts)
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+if DATABASE_URL:
+    # parse db url and force sslmode if PGSSLMODE is set or default to require
+    db_config = dj_database_url.parse(DATABASE_URL, conn_max_age=int(os.getenv('CONN_MAX_AGE', 600)))
+    # Ensure sslmode in options for psycopg2 (Supabase requires SSL)
+    pgssl = os.getenv('PGSSLMODE', 'require')
+    options = db_config.get('OPTIONS', {})
+    options.setdefault('sslmode', pgssl)
+    db_config['OPTIONS'] = options
+    DATABASES = {'default': db_config}
+else:
+    # fallback to explicit env vars (existing behavior)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME'),
+            'USER': os.getenv('DB_USER'),
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            'HOST': os.getenv('DB_HOST'),
+            'PORT': os.getenv('DB_PORT'),
+            'OPTIONS': {
+                'sslmode': os.getenv('PGSSLMODE', 'require'),
+            }
+        }
     }
-}
+
+
 
 
 
