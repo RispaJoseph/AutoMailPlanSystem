@@ -4,6 +4,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from mailplans.views import MailPlanViewSet
 from mailplans.recipient_views import RecipientListView
+from mailplans.auth_views import SafeTokenObtainPairView
 
 # JWT token views
 from rest_framework_simplejwt.views import (
@@ -32,7 +33,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     # JWT authentication endpoints
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    # path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/', SafeTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     # MailPlan API endpoints
