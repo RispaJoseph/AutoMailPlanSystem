@@ -1,81 +1,80 @@
-from pathlib import Path
-BASE_DIR = Path(__file__).resolve().parent.parent
+# from pathlib import Path
+# BASE_DIR = Path(__file__).resolve().parent.parent
 
-import os
-from dotenv import load_dotenv
-load_dotenv()
-from datetime import timedelta
+# import os
 
-# SECRET_KEY = 'django-insecure-a47g=z3*w1%t(i10kgb&!=)79ld_pk9wyq3wfnoi@#+stkl5%d'
-SECRET_KEY = os.getenv('SECRET_KEY')
+# if os.environ.get("DISABLE_EMAIL_SEND", "0") in ("1", "true", "True"):
+#     EMAIL_BACKEND = "django.core.mail.backends.dummy.EmailBackend"
+
+    
+# from dotenv import load_dotenv
+# load_dotenv()
+# from datetime import timedelta
+
+# # SECRET_KEY = 'django-insecure-a47g=z3*w1%t(i10kgb&!=)79ld_pk9wyq3wfnoi@#+stkl5%d'
+# SECRET_KEY = os.getenv('SECRET_KEY')
 
 
 # DEBUG = True
-DEBUG = os.environ.get("DEBUG", "False").lower() in ("true", "1", "yes")
 
-def _split_env_list(env_key, default=""):
-    return [v.strip() for v in os.environ.get(env_key, default).split(",") if v.strip()]
-
-ALLOWED_HOSTS = _split_env_list("ALLOWED_HOSTS", "localhost,127.0.0.1")
+# ALLOWED_HOSTS = []
 
 
 
+# INSTALLED_APPS = [
+#     'django.contrib.admin',
+#     'django.contrib.auth',
+#     'django.contrib.contenttypes',
+#     'django.contrib.sessions',
+#     'django.contrib.messages',
+#     'django.contrib.staticfiles',
+#     'rest_framework',
+#     'corsheaders',
+#     'mailplans',
+# ]
 
-INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'rest_framework',
-    'corsheaders',
-    'mailplans',
-]
-
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    "whitenoise.middleware.WhiteNoiseMiddleware",
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
+# MIDDLEWARE = [
+#     'django.middleware.security.SecurityMiddleware',
+#     'django.contrib.sessions.middleware.SessionMiddleware',
+#     'django.middleware.common.CommonMiddleware',
+#     'django.middleware.csrf.CsrfViewMiddleware',
+#     'django.contrib.auth.middleware.AuthenticationMiddleware',
+#     'django.contrib.messages.middleware.MessageMiddleware',
+#     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+#     'corsheaders.middleware.CorsMiddleware',
+# ]
 
 
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-}
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': (
+#         'rest_framework_simplejwt.authentication.JWTAuthentication',
+#     ),
+# }
 
 
-ROOT_URLCONF = 'backend.urls'
+# ROOT_URLCONF = 'backend.urls'
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
-        },
-    },
-]
+# TEMPLATES = [
+#     {
+#         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+#         'DIRS': [],
+#         'APP_DIRS': True,
+#         'OPTIONS': {
+#             'context_processors': [
+#                 'django.template.context_processors.request',
+#                 'django.contrib.auth.context_processors.auth',
+#                 'django.contrib.messages.context_processors.messages',
+#             ],
+#         },
+#     },
+# ]
 
-WSGI_APPLICATION = 'backend.wsgi.application'
+# WSGI_APPLICATION = 'backend.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+# # Database
+# # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 # DATABASES = {
 #     'default': {
@@ -85,161 +84,315 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 #         'PASSWORD': os.getenv('DB_PASSWORD'),
 #         'HOST': os.getenv('DB_HOST'),
 #         'PORT': os.getenv('DB_PORT'),
-#         'OPTIONS': {
-#             'sslmode': os.getenv('PGSSLMODE', 'require'),
-#         },
 #     }
 # }
 
 
+# # Password validation
+# # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
-# Add near top imports
-import dj_database_url
-
-# Prefer a single DATABASE_URL env var if present (convenient on many hosts)
-DATABASE_URL = os.getenv('DATABASE_URL')
-
-if DATABASE_URL:
-    # parse db url and force sslmode if PGSSLMODE is set or default to require
-    db_config = dj_database_url.parse(DATABASE_URL, conn_max_age=int(os.getenv('CONN_MAX_AGE', 600)))
-    # Ensure sslmode in options for psycopg2 (Supabase requires SSL)
-    pgssl = os.getenv('PGSSLMODE', 'require')
-    options = db_config.get('OPTIONS', {})
-    options.setdefault('sslmode', pgssl)
-    db_config['OPTIONS'] = options
-    DATABASES = {'default': db_config}
-else:
-    # fallback to explicit env vars (existing behavior)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('DB_NAME'),
-            'USER': os.getenv('DB_USER'),
-            'PASSWORD': os.getenv('DB_PASSWORD'),
-            'HOST': os.getenv('DB_HOST'),
-            'PORT': os.getenv('DB_PORT'),
-            'OPTIONS': {
-                'sslmode': os.getenv('PGSSLMODE', 'require'),
-            }
-        }
-    }
+# AUTH_PASSWORD_VALIDATORS = [
+#     {
+#         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+#     },
+#     {
+#         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+#     },
+#     {
+#         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+#     },
+#     {
+#         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+#     },
+# ]
 
 
+# # Internationalization
+# # https://docs.djangoproject.com/en/5.2/topics/i18n/
+
+# LANGUAGE_CODE = 'en-us'
+
+# TIME_ZONE = 'UTC'
+
+# USE_I18N = True
+
+# USE_TZ = True
 
 
-
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
-
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
-
-USE_I18N = True
-
-USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
+# # Static files (CSS, JavaScript, Images)
+# # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 # STATIC_URL = 'static/'
 
-STATIC_ROOT = os.environ.get("STATIC_ROOT", str(BASE_DIR / "staticfiles"))
-STATIC_URL = "/static/"
+# # Default primary key field type
+# # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+# DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-CORS_ALLOW_ALL_ORIGINS = os.environ.get("CORS_ALLOW_ALL_ORIGINS", "False").lower() in ("true","1","yes")
-if not CORS_ALLOW_ALL_ORIGINS:
-    CORS_ALLOWED_ORIGINS = _split_env_list("CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000")
-else:
-    CORS_ALLOWED_ORIGINS = []
+# CORS_ALLOW_ALL_ORIGINS = True
 
 
+# CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+# CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
 
-CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
-CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+# CELERY_ACCEPT_CONTENT = ['json']
+# CELERY_TASK_SERIALIZER = 'json'
+# CELERY_RESULT_SERIALIZER = 'json'
+# CELERY_TIMEZONE = os.getenv('CELERY_TIMEZONE', 'Asia/Kolkata')
+# CELERY_ENABLE_UTC = True
 
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = os.getenv('CELERY_TIMEZONE', 'Asia/Kolkata')
-CELERY_ENABLE_UTC = True
+# # Optional: how long results are kept (seconds)
+# CELERY_RESULT_EXPIRES = int(os.getenv('CELERY_RESULT_EXPIRES', 3600))
 
-# Optional: how long results are kept (seconds)
-CELERY_RESULT_EXPIRES = int(os.getenv('CELERY_RESULT_EXPIRES', 3600))
+# from celery.schedules import crontab
 
-from celery.schedules import crontab
+# CELERY_BEAT_SCHEDULE = {
+#     'check-due-mailplans-every-minute': {
+#         'task': 'mailplans.tasks.schedule_due_mailplans',
+#         'schedule': crontab(minute='*/1'),  # every 1 minute
+#     },
+# }
 
-CELERY_BEAT_SCHEDULE = {
-    'check-due-mailplans-every-minute': {
-        'task': 'mailplans.tasks.schedule_due_mailplans',
-        'schedule': crontab(minute='*/1'),  # every 1 minute
+
+# SIMPLE_JWT = {
+#     "ACCESS_TOKEN_LIFETIME": timedelta(hours=int(os.getenv("ACCESS_TOKEN_HOURS", 1))),
+#     "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.getenv("REFRESH_TOKEN_DAYS", 7))),
+#     "ROTATE_REFRESH_TOKENS": False,
+#     "BLACKLIST_AFTER_ROTATION": True,
+
+#     "ALGORITHM": "HS256",
+#     "SIGNING_KEY": SECRET_KEY,
+#     "AUTH_HEADER_TYPES": ("Bearer",),
+# }
+
+# # SMTP
+# EMAIL_HOST = os.getenv('EMAIL_HOST', 'localhost')
+# EMAIL_PORT = int(os.getenv('EMAIL_PORT', 25))
+# EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+# EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+# EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'False').lower() in ('true', '1', 'yes')
+# DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'no-reply@example.com')
+
+# # Optional: increase email timeout
+# EMAIL_TIMEOUT = 10
+
+
+
+
+
+
+
+
+
+
+# -------------------------------------------------------------------------------------------------------------
+
+
+
+# backend/backend/settings.py
+from pathlib import Path
+import os
+from datetime import timedelta
+from dotenv import load_dotenv
+
+# Base directory
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load local .env for development (ignored in production where env vars will be set)
+load_dotenv()
+
+# -----------------------
+# Secrets & Debugging
+# -----------------------
+SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-me")
+DEBUG = os.getenv("DEBUG", "True").lower() in ("1", "true", "yes")
+
+# ALLOWED_HOSTS - comma separated list in env, or empty for local dev
+ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "").split(",") if h.strip()]
+
+# -----------------------
+# Installed apps & middleware
+# -----------------------
+INSTALLED_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "rest_framework",
+    "corsheaders",
+    "mailplans",
+]
+
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # WhiteNoise (serves static files in production)
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+]
+
+ROOT_URLCONF = "backend.urls"
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],  # add template dirs here if needed
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
     },
+]
+
+WSGI_APPLICATION = "backend.wsgi.application"
+
+# -----------------------
+# Database (Postgres / Supabase friendly)
+# -----------------------
+# Prefer individual env vars; optionally you can set DATABASE_URL (not required)
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("DB_NAME"),
+        "USER": os.getenv("DB_USER"),
+        "PASSWORD": os.getenv("DB_PASSWORD"),
+        "HOST": os.getenv("DB_HOST"),
+        "PORT": os.getenv("DB_PORT", "5432"),
+    }
 }
 
+# If PGSSLMODE is set to require, instruct psycopg2 to use sslmode=require (Supabase)
+if os.getenv("PGSSLMODE", "").lower() in ("require", "true", "1"):
+    DATABASES["default"].setdefault("OPTIONS", {})["sslmode"] = "require"
+
+# Alternative: If you supply a DATABASE_URL, you could parse it with dj-database-url (optional)
+
+# -----------------------
+# Password validation
+# -----------------------
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+
+# -----------------------
+# Internationalization & timezone
+# -----------------------
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = os.getenv("TIME_ZONE", "UTC")  # set to Asia/Kolkata if preferred: "Asia/Kolkata"
+USE_I18N = True
+USE_TZ = True
+
+# -----------------------
+# Static files (WhiteNoise + collectstatic)
+# -----------------------
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"  # `python manage.py collectstatic` will place files here
+
+# WhiteNoise recommended storage for production (set only when whitenoise installed)
+# This setting is optional but recommended for caching and fingerprinted static files.
+if not DEBUG:
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+# -----------------------
+# REST framework & JWT
+# -----------------------
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+}
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=int(os.getenv("ACCESS_TOKEN_HOURS", 1))),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.getenv("REFRESH_TOKEN_DAYS", 7))),
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": True,
-
     "ALGORITHM": "HS256",
     "SIGNING_KEY": SECRET_KEY,
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-# SMTP
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'localhost')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', 25))
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'False').lower() in ('true', '1', 'yes')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'no-reply@example.com')
+# -----------------------
+# CORS
+# -----------------------
+# Use a flag CORS_ALLOW_ALL for local development; in production set CORS_ALLOWED_ORIGINS env
+if os.getenv("CORS_ALLOW_ALL", "True").lower() in ("1", "true", "yes"):
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOWED_ORIGINS = [
+        u.strip()
+        for u in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",")
+        if u.strip()
+    ]
 
-# Optional: increase email timeout
-EMAIL_TIMEOUT = 10
+# -----------------------
+# Celery
+# -----------------------
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE", "Asia/Kolkata")
+CELERY_ENABLE_UTC = True
+CELERY_RESULT_EXPIRES = int(os.getenv("CELERY_RESULT_EXPIRES", 3600))
 
+from celery.schedules import crontab  # noqa: E402 (import here to keep file order)
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
-
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {"class": "logging.StreamHandler"},
-    },
-    "root": {
-        "handlers": ["console"],
-        "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
-    },
-    "loggers": {
-        "django": {"handlers": ["console"], "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"), "propagate": False},
-        "mailplans": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+CELERY_BEAT_SCHEDULE = {
+    "check-due-mailplans-every-minute": {
+        "task": "mailplans.tasks.schedule_due_mailplans",
+        "schedule": crontab(minute="*/1"),  # every 1 minute
     },
 }
+
+# -----------------------
+# Email (SMTP)
+# -----------------------
+# Option to disable sending by setting DISABLE_EMAIL_SEND=1 in env
+if os.environ.get("DISABLE_EMAIL_SEND", "0") in ("1", "true", "True"):
+    EMAIL_BACKEND = "django.core.mail.backends.dummy.EmailBackend"
+else:
+    EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+
+EMAIL_HOST = os.getenv("EMAIL_HOST", "localhost")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", 25))
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "False").lower() in ("true", "1", "yes")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@example.com")
+EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", 10))
+
+# -----------------------
+# Other common settings
+# -----------------------
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# -----------------------
+# Security hardening for production when DEBUG=False
+# -----------------------
+if not DEBUG:
+    # Redirect all HTTP to HTTPS
+    SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "True").lower() in ("1", "true", "yes")
+    SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "True").lower() in ("1", "true", "yes")
+    CSRF_COOKIE_SECURE = os.getenv("CSRF_COOKIE_SECURE", "True").lower() in ("1", "true", "yes")
+    # HSTS - optional; set to a lower value for staging if you are testing
+    SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", 31536000))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv("SECURE_HSTS_INCLUDE_SUBDOMAINS", "True").lower() in ("1", "true", "yes")
+    SECURE_HSTS_PRELOAD = os.getenv("SECURE_HSTS_PRELOAD", "True").lower() in ("1", "true", "yes")
+
+# End of file
