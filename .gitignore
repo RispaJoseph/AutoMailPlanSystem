@@ -32,3 +32,6 @@ frontend/.env
 .coverage
 htmlcov/
 build/
+
+# Ignore database dump files
+*.dump
