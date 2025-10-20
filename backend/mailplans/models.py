@@ -19,7 +19,7 @@ class MailPlan(models.Model):
     name = models.CharField(max_length=100)
     # restore subject (this is the missing column)
     subject = models.CharField(max_length=200, null=True, blank=True)
-    # content was removed in a later migration, so we do not keep it here
+    content = models.TextField(null=True, blank=True)
     trigger_type = models.CharField(max_length=50, choices=PLAN_TRIGGER_CHOICES, default='on_signup')
     scheduled_time = models.DateTimeField(blank=True, null=True)
     recipient_email = models.EmailField(blank=True, null=True)
